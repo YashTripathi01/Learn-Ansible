@@ -1,0 +1,11 @@
+sudo apt-get install ansible
+sudo apt-get install sshpass
+
+create inventory dir where the files for ansible will be stored
+touch hosts 
+
+command to check connection- 
+ansible -i ./inventory/hosts ubuntuServers -m ping --user yash --ask-pass
+
+command to run playbook - 
+ansible-playbook ./playbook/apt.yml --user yash --ask-pass --ask-become-pass -i ./inventory/hosts

@@ -1,0 +1,9 @@
+- name: install latest glances on all hosts
+  hosts: "*"
+  tasks:
+      - name: install glances
+        apt:
+            name: glances
+            state: present
+            update_cache: true
+        become: true
