@@ -1,0 +1,40 @@
+- name: install docker on all hosts
+  hosts: "*"
+  become: true
+  vars:
+      docker_group: "docker"
+      user: "yash"
+  tasks:
+      - name: install docker dependencies
+        apt:
+            name: "{{item}}"
+            state: present
+            update_cache: true
+        loop:
+            - apt-transport-https
+            - ca-certificates
+            - curl
+            - software-properties-common
+      - name: install docker
+        apt:
+            name: docker.io
+            state: present
+            update_cache: true
+      - name: make sure that docker was started and enabled
+        service:
+            name: docker
+            state: started
+            enabled: yes
+      - name: ensure group "docker" exists
+        ansible.builtin.group:
+            name: docker
+            state: present
+      - name: create "docker" group
+        group:
+            name: "{{docker_group}}"
+            state: present
+      - name: add user to "docker" group
+        user:
+            name: "{{user}}"
+            groups: "{{docker_group}}"
+            append: yes
