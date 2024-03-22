@@ -1,0 +1,71 @@
+- name: Install Docker on Ubuntu using docker docs
+  hosts: all
+  become: true
+  vars:
+    docker_group: "docker"
+    user: "ubuntu"
+  tasks:
+    - name: update apt cache
+      apt:
+        update_cache: yes
+
+    - name: install prerequisites
+      apt:
+        name:
+          - ca-certificates
+          - curl
+
+    - name: create directory /etc/apt/keyrings
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: download docker GPG key
+      command: >
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+
+    - name: change permissions for docker GPG key
+      command: chmod a+r /etc/apt/keyrings/docker.asc
+
+    - name: add docker repository to apt sources
+      shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+      args:
+        executable: /bin/bash
+
+    - name: update apt cache again
+      apt:
+        update_cache: yes
+
+    - name: install Docker CE and related packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: make sure that docker was started and enabled
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: ensure group "docker" exists
+      ansible.builtin.group:
+        name: docker
+        state: present
+
+    - name: create "docker" group
+      group:
+        name: "{{docker_group}}"
+        state: present
+
+    - name: add user to "docker" group
+      user:
+        name: "{{user}}"
+        groups: "{{docker_group}}"
+        append: yes
